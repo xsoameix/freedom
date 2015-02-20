@@ -1,0 +1,8 @@
+# vim
+*.swp
+
+Gemfile.lock
+
+*.pdf
+*.txt
+*.csv
