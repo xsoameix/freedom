@@ -3,6 +3,6 @@
 
 Gemfile.lock
 
-*.pdf
-*.txt
-*.csv
+**/*.pdf
+**/*.txt
+all.csv

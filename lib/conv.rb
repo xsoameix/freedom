@@ -32,10 +32,12 @@ class CSV
           case l
           when /(（|\()作者.+(\)|）)/
             "<p>#{l}</p>"
+          when /●/
+            "<h4>#{l.sub /\A　+/, ''}</h4>"
           when /，|。/
-            "<p>　　#{l}</p>"
+            "<p>　　#{l.sub /\A　　/, ''}</p>"
           else
-            "<h4>#{l}</h4>"
+            "<h4>#{l.sub /\A　+/, ''}</h4>"
           end
         end.join}\""
       end
@@ -47,6 +49,11 @@ class Article
 
   attr_reader :title, :author, :body, :year, :month, :day
 
+  require_relative 'articles/china_times'
+  require_relative 'articles/udn'
+  require_relative 'articles/idn'
+  SOURCES = [ChinaTimes, Udn, Idn]
+
   class << self
 
     # interface
@@ -55,10 +62,14 @@ class Article
 
     def doc_to_csv
       arts = []
-      Dir["articles/*/#{from}/*.doc"].each do |fname|
-        a = new
-        a.parse fname
-        arts.push a
+      SOURCES.each do |src|
+        dir = "articles/*/#{src.from}"
+        Dir["#{dir}/*.doc", "#{dir}/*.docx"].each do |fname|
+          a = src.new
+          #a.doc_to_txt fname
+          a.parse fname
+          arts.push a
+        end
       end
       to_csv arts
     end
@@ -77,47 +88,22 @@ class Article
     end
   end
 
+  def doc_to_txt(fname)
+    dir = fname.split('/')[0..-2].join '/'
+    puts fname
+    `libreoffice --invisible --convert-to txt:Text "#{fname}" --outdir #{dir}`
+  end
+
   # interface
   def parse(fname)
   end
 
   def to_csv(format)
-    date = "%02d-%02d-%02d 0:00:00" % [@year, @month, @day]
+    date = "%02s-%02s-%02s 0:00:00" % [@year, @month, @day]
     format.to_csv('Start Date' => date,
                   'End Date'   => date,
                   'Headline'   => "#{@author} - #{@title}",
                   'Text'       => "#{@body}")
   end
 end
-
-class ChinaTimes < Article
-
-  class << self
-
-    def from; '中時' end
-  end
-
-  def parse(file)
-    #dir = fname.split('/')[0..-2].join '/'
-    #`libreoffice --invisible --convert-to txt:Text "#{fname}" --outdir #{dir}`
-    text = File.read "#{file[/.+(?=.doc)/]}.txt"
-    file =~ /(?<author>[^\/]+)\/#{self.class.from}\/(?<fname>[^\/]+)\.doc\Z/
-    author = $~['author']
-    text =~ /\A(
-      \u{FEFF}(?<title>.+)\n#{author}([^\n]+)?\n+|
-      (?<title>.+)\n
-    )(?<body>.+)\n
-    中國時報(?<y>\d+)年(?<m>\d+)月(?<d>\d+)日\n\Z/mx
-    if $~.nil?
-      require 'pry-nav'
-      binding.pry
-    end
-    @title = $~['title'].split("\n").join
-    @author = author
-    @body = $~['body']
-    @year = $~['y']
-    @month = $~['m']
-    @day = $~['d']
-  end
-end
-ChinaTimes.doc_to_csv
+Article.doc_to_csv

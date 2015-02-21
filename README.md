@@ -1,7 +1,9 @@
-# Doc to yaml
+# Doc to CSV
 
 ## Installation
 
     $ sudo apt-get install libreoffice
     $ bundle install
-    $ ruby conv.rb
+    $ ruby lib/conv.rb
+
+The output file is `all.csv`.
