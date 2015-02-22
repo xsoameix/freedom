@@ -5,4 +5,5 @@ Gemfile.lock
 
 **/*.pdf
 **/*.txt
+**/*.csv
 all.csv

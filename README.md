@@ -2,7 +2,7 @@
 
 ## Installation
 
-    $ sudo apt-get install libreoffice
+    $ sudo apt-get install unoconv
     $ bundle install
     $ ruby lib/conv.rb
 
