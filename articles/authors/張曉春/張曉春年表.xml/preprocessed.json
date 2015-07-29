@@ -2925,8 +2925,8 @@
     "cols": [
       {
         "index": "A",
-        "type": "str",
-        "value": "8392"
+        "type": "int",
+        "value": 32499
       },
       {
         "index": "D",
@@ -3591,7 +3591,7 @@
       {
         "index": "A",
         "type": "str",
-        "value": "19909/3"
+        "value": "1990/9/3"
       },
       {
         "index": "D",

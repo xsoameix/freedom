@@ -11,7 +11,7 @@ module Conv
       class << self
 
         def load(row)
-          new(row['index'], row['cols'])
+          new(row['index'], row['cols'].map { |c| Col.load(c) })
         end
       end
 
@@ -52,11 +52,22 @@ module Conv
       end
 
       def to_s
-        to_h.to_s
+        "[#{@index}](#{@type}): #{@value}"
       end
 
       def inspect
-        to_h.to_s
+        to_s
+      end
+    end
+
+    class InvalidError < RuntimeError
+
+      def initialize(fname, row, col)
+        @fname, @row, @col = fname, row, col
+      end
+
+      def to_s
+        "\n#{File.basename(@fname)[/.*(?=\..*)/]}, [#{@row.index}]#{@col}"
       end
     end
 
@@ -121,20 +132,23 @@ module Conv
     def parse(fname)
       rows = JSON.parse File.read "#{fname}/preprocessed.json"
       empty = /\A[\s\n]*\Z/m
-      occasions = rows.map do |row|
+      occasions = rows.map { |r| Row.load(r) }.map do |row|
         title, author, period, stamp, list, body = nil
-        cols = row.map { |c| Col.load(c) }
-        cols.each do |col|
+        row.cols.each do |col|
           ci, ct, cv = col.index, col.type, col.value
           if ci == 'A'
             if ct == 'int'
               period = parse_ctime cv
             elsif ct == 'str'
-              pp = parse_cperiod cv # pp: processed period
-              if pp
-                period = pp
+              if cv =~ /\A？|\?|大二上學期\Z/
+                nil
               else
-                raise "col A should be correct: #{col}"
+                pp = parse_cperiod cv # pp: processed period
+                if pp
+                  period = pp
+                else
+                  raise InvalidError.new fname, row, col
+                end
               end
             else
               raise "col A should be parsed: #{col}"
@@ -145,14 +159,14 @@ module Conv
             elsif ct == 'ary'
               list, body = parse_cevent *cv
             elsif ct == 'str'
-              list = st.split /\s{4}\s*|\n+/
+              list = cv.split /\s{4}\s*|\n+/
             else
               raise "col B should be parsed: #{col}"
             end
           elsif ci == 'C'
             if ct == 'str'
               if !cv
-                raise "col B should be correct: #{col}"
+                raise InvalidError.new fname, row, col
               end
               title,author,period,stamp,body = parse_creport cv
             else
@@ -162,9 +176,9 @@ module Conv
             nil
           end
         end
-        if cols.find { |c| c.index == 'B' }
+        if row.cols.find { |c| c.index == 'B' }
           Occasion.new title,author,period,stamp,list,body,Occasion::Event
-        elsif cols.find { |c| c.index == 'C' }
+        elsif row.cols.find { |c| c.index == 'C' }
           Occasion.new title,author,period,stamp,list,body,Occasion::Report
         else
           nil
