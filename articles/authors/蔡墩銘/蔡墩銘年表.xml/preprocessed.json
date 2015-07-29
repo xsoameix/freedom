@@ -1,122 +1,152 @@
 [
-  [
-    {
-      "col": "A",
-      "type": "int",
-      "val": 31203
-    },
-    {
-      "col": "D",
-      "type": "str",
-      "val": "對於檢肅流氓條例立法之吾見(自立晚報)"
-    }
-  ],
-  [
-    {
-      "col": "A",
-      "type": "int",
-      "val": 31804
-    },
-    {
-      "col": "D",
-      "type": "str",
-      "val": "刑法之修正應注意特別刑法之歸併(自立晚報)"
-    }
-  ],
-  [
-    {
-      "col": "A",
-      "type": "int",
-      "val": 31929
-    },
-    {
-      "col": "D",
-      "type": "str",
-      "val": "替人去勢豈可無罰(自立晚報)"
-    }
-  ],
-  [
-    {
-      "col": "A",
-      "type": "int",
-      "val": 32154
-    },
-    {
-      "col": "D",
-      "type": "str",
-      "val": "開放正權以統一國家(自立晚報)"
-    }
-  ],
-  [
-    {
-      "col": "A",
-      "type": "int",
-      "val": 33623
-    },
-    {
-      "col": "D",
-      "type": "str",
-      "val": "從法學觀點談性騷擾之報告(自立晚報)"
-    }
-  ],
-  [
-    {
-      "col": "A",
-      "type": "int",
-      "val": 34845
-    },
-    {
-      "col": "D",
-      "type": "str",
-      "val": "從經驗法則看三名死刑犯判決(自立晚報)"
-    }
-  ],
-  [
-    {
-      "col": "A",
-      "type": "int",
-      "val": 35027
-    },
-    {
-      "col": "D",
-      "type": "str",
-      "val": "蘇建和等三名死刑特案報告(自立晚報)"
-    }
-  ],
-  [
-    {
-      "col": "A",
-      "type": "int",
-      "val": 35029
-    },
-    {
-      "col": "D",
-      "type": "str",
-      "val": "無罪的罪人(自立晚報)"
-    }
-  ],
-  [
-    {
-      "col": "A",
-      "type": "int",
-      "val": 35030
-    },
-    {
-      "col": "D",
-      "type": "str",
-      "val": "將錯就錯不謀補救私法態度令人失望(自立晚報)"
-    }
-  ],
-  [
-    {
-      "col": "A",
-      "type": "int",
-      "val": 35031
-    },
-    {
-      "col": "D",
-      "type": "str",
-      "val": "一案不同私法機關判決造成缺憾(自立晚報)"
-    }
-  ]
+  {
+    "index": "2",
+    "cols": [
+      {
+        "index": "A",
+        "type": "int",
+        "value": 31203
+      },
+      {
+        "index": "D",
+        "type": "str",
+        "value": "對於檢肅流氓條例立法之吾見(自立晚報)"
+      }
+    ]
+  },
+  {
+    "index": "3",
+    "cols": [
+      {
+        "index": "A",
+        "type": "int",
+        "value": 31804
+      },
+      {
+        "index": "D",
+        "type": "str",
+        "value": "刑法之修正應注意特別刑法之歸併(自立晚報)"
+      }
+    ]
+  },
+  {
+    "index": "4",
+    "cols": [
+      {
+        "index": "A",
+        "type": "int",
+        "value": 31929
+      },
+      {
+        "index": "D",
+        "type": "str",
+        "value": "替人去勢豈可無罰(自立晚報)"
+      }
+    ]
+  },
+  {
+    "index": "5",
+    "cols": [
+      {
+        "index": "A",
+        "type": "int",
+        "value": 32154
+      },
+      {
+        "index": "D",
+        "type": "str",
+        "value": "開放正權以統一國家(自立晚報)"
+      }
+    ]
+  },
+  {
+    "index": "6",
+    "cols": [
+      {
+        "index": "A",
+        "type": "int",
+        "value": 33623
+      },
+      {
+        "index": "D",
+        "type": "str",
+        "value": "從法學觀點談性騷擾之報告(自立晚報)"
+      }
+    ]
+  },
+  {
+    "index": "7",
+    "cols": [
+      {
+        "index": "A",
+        "type": "int",
+        "value": 34845
+      },
+      {
+        "index": "D",
+        "type": "str",
+        "value": "從經驗法則看三名死刑犯判決(自立晚報)"
+      }
+    ]
+  },
+  {
+    "index": "8",
+    "cols": [
+      {
+        "index": "A",
+        "type": "int",
+        "value": 35027
+      },
+      {
+        "index": "D",
+        "type": "str",
+        "value": "蘇建和等三名死刑特案報告(自立晚報)"
+      }
+    ]
+  },
+  {
+    "index": "9",
+    "cols": [
+      {
+        "index": "A",
+        "type": "int",
+        "value": 35029
+      },
+      {
+        "index": "D",
+        "type": "str",
+        "value": "無罪的罪人(自立晚報)"
+      }
+    ]
+  },
+  {
+    "index": "10",
+    "cols": [
+      {
+        "index": "A",
+        "type": "int",
+        "value": 35030
+      },
+      {
+        "index": "D",
+        "type": "str",
+        "value": "將錯就錯不謀補救私法態度令人失望(自立晚報)"
+      }
+    ]
+  },
+  {
+    "index": "11",
+    "cols": [
+      {
+        "index": "A",
+        "type": "int",
+        "value": 35031
+      },
+      {
+        "index": "D",
+        "type": "str",
+        "value": "一案不同私法機關判決造成缺憾(自立晚報)"
+      }
+    ]
+  }
 ]

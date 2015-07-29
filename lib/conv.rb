@@ -126,7 +126,7 @@ module Conv
           file.rows = [head]
           file
         end
-        if ARGV[0] = 'preprocess'
+        if ARGV[0] == 'preprocess'
           Dir["articles/authors/*/*.xml"].each do |fname|
             timeline = TimelineParser.new.preprocess(fname)
             #File.open("#{fname}/preprocessed.yml", 'w') do |f|
@@ -157,9 +157,19 @@ module Conv
         # 文崇一
         # 張忠棟
         # 蔡墩銘
-        name = '張曉春'
-        mode = 'basic'
+        name = '*'
         dir = "articles/authors/#{name}"
+        if ARGV[0] == 'parse'
+          Dir["#{dir}/*.xml"].each do |fname|
+            timeline = TimelineParser.new.parse fname
+            #timeline = timeline.map(&:to_h).map.with_index do |h, i|
+            #  {'i'=>i}.merge(h)
+            #end
+            #File.open("#{dir}/parsed.yml", 'w') do |f|
+            #  f.write(timeline.to_yaml)
+            #end
+          end
+        end
         if ARGV[0] == 'cont'
           Dir["#{dir}/*.xml"].each do |fname|
             timeline = TimelineParser.new.parse fname

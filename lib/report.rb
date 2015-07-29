@@ -4,14 +4,59 @@ require 'date'
 module Conv
   class TimelineParser
 
+    class Row
+
+      attr_reader :index, :cols
+
+      class << self
+
+        def load(row)
+          new(row['index'], row['cols'])
+        end
+      end
+
+      def initialize(index, cols)
+        @index, @cols = index, cols
+      end
+
+      def to_h
+        {'index'=>@index, 'cols'=>@cols}
+      end
+
+      def to_s
+        to_h.to_s
+      end
+
+      def inspect
+        to_h.to_s
+      end
+    end
+
     class Col
+
+      attr_reader :index, :type, :value
+
+      class << self
+
+        def load(col)
+          new(col['index'], col['type'], col['value'])
+        end
+      end
 
       def initialize(index, type, value)
         @index, @type, @value = index, type, value
       end
 
       def to_h
-        {'col'=>@index, 'type'=>@type, 'val'=>@value}
+        {'index'=>@index, 'type'=>@type, 'value'=>@value}
+      end
+
+      def to_s
+        to_h.to_s
+      end
+
+      def inspect
+        to_h.to_s
       end
     end
 
@@ -22,113 +67,139 @@ module Conv
       sr = sheet / '/xmlns:worksheet/xmlns:sheetData/xmlns:row[position()>1]'
       empty = /\A[\s\n]*\Z/m
       occasions = sr.map do |row|
-        row.children.map do |col|
-          ct, cr = col.text, col.attr('r')[0]
-          if ct && ct =~ empty
+        cols = row.children.map do |col|
+          ci, ct, cv = col.attr('r')[0], col.attr('t'), col.text
+          if cv && cv =~ empty
             nil
-          elsif cr == 'A'
-            if ct && ct =~ /\A\d{5}\Z/ && ct.to_i > 12000 && ct.to_i < 42000
-              Col.new(cr, 'int', ct.to_i)
-            elsif col.attr('t') == 's'
-              st = (se = si[ct.to_i]).text
-              Col.new(cr, 'str', st)
+          elsif ci == 'A'
+            if cv && cv =~ /\A\d{5}\Z/ && cv.to_i > 12000 && cv.to_i < 42000
+              Col.new(ci, 'int', cv.to_i)
+            elsif ct == 's'
+              sv = (se = si[cv.to_i]).text
+              Col.new(ci, 'str', sv)
             else
-              Col.new(cr, 'str', ct)
+              Col.new(ci, 'str', cv)
             end
-          elsif cr == 'B'
-            if ct && ct =~ /\A\d{5}\Z/ && ct.to_i > 12000 && ct.to_i < 42000
-              Col.new(cr, 'int', ct.to_i)
-            elsif col.attr('t') == 's'
-              st = (se = si[ct.to_i]).text
-              rt = (re = se / './xmlns:r').map(&:text)
-              if rt.size > 1
-                lt = re.slice_after do |s|
+          elsif ci == 'B'
+            if cv && cv =~ /\A\d{5}\Z/ && cv.to_i > 12000 && cv.to_i < 42000
+              Col.new(ci, 'int', cv.to_i)
+            elsif ct == 's'
+              sv = (se = si[cv.to_i]).text
+              rv = (re = se / './xmlns:r').map(&:text)
+              if rv.size > 1
+                lv = re.slice_after do |s|
                   s.at('./xmlns:t').attr('xml:space')=='preserve'
                 end.map { |s| s.map(&:text).join }
-                Col.new(cr, 'ary', [rt, lt])
+                Col.new(ci, 'ary', [rv, lv])
               else
-                Col.new(cr, 'str', st)
+                Col.new(ci, 'str', sv)
               end
             else
-              Col.new(cr, 'str', ct)
+              Col.new(ci, 'str', cv)
             end
-          elsif cr == 'C'
-            if col.attr('t') == 's'
-              st = (se = si[ct.to_i]).text
-              Col.new(cr, 'str', st)
+          elsif ci == 'C'
+            if ct == 's'
+              sv = (se = si[cv.to_i]).text
+              Col.new(ci, 'str', sv)
             else
-              Col.new(cr, 'str', ct)
+              Col.new(ci, 'str', cv)
             end
           else
-            if col.attr('t') == 's'
-              st = (se = si[ct.to_i]).text
-              Col.new(cr, 'str', st)
+            if ct == 's'
+              sv = (se = si[cv.to_i]).text
+              Col.new(ci, 'str', sv)
             else
-              Col.new(cr, 'str', ct)
+              Col.new(ci, 'str', cv)
             end
             #puts "[#{ct}] #{col.attr('t')} #{File.basename(fname)[/.*(?=\..*)/]} #{col.attr('r')}"
           end
         end.compact.map(&:to_h)
+        Row.new(row.attr('r'), cols).to_h
       end
     end
 
     def parse(fname)
-      strings, sheet = ['strings', 'sheet1']
-      .map { |f| Nokogiri::XML.parse File.read "#{fname}/#{f}.xml" }
-      si = strings / '/xmlns:sst/xmlns:si'
-      sr = sheet / '/xmlns:worksheet/xmlns:sheetData/xmlns:row[position()>1]'
+      rows = JSON.parse File.read "#{fname}/preprocessed.json"
       empty = /\A[\s\n]*\Z/m
-      occasions = sr.map do |row|
-        title, author, period, stamp, list, body, type = nil
-        row.children.each do |col|
-          ct, cr = col.text, col.attr('r')[0]
-          if cr == 'A' then period = parse_cperiod ct, period
-          elsif col.attr('t') == 's'
-            st = (se = si[ct.to_i]).text
-            if type = cr == 'C'
-              title,author,period,stamp,body = parse_creport(st, period)
-            elsif cr == 'B'
-              rt = (re = se / './xmlns:r').map(&:text).reject {|t|t =~ empty}
-              if rt.size > 1 then list, body = parse_cevent st, re, rt
-              else                list = st.split /\s{4}\s*|\n+/
+      occasions = rows.map do |row|
+        title, author, period, stamp, list, body = nil
+        cols = row.map { |c| Col.load(c) }
+        cols.each do |col|
+          ci, ct, cv = col.index, col.type, col.value
+          if ci == 'A'
+            if ct == 'int'
+              period = parse_ctime cv
+            elsif ct == 'str'
+              pp = parse_cperiod cv # pp: processed period
+              if pp
+                period = pp
+              else
+                raise "col A should be correct: #{col}"
               end
-            end # cr == 'D'
-          elsif ct =~ /^\d+$/ then period = parse_ctime ct
-          end # ct.empty? == true
+            else
+              raise "col A should be parsed: #{col}"
+            end
+          elsif ci == 'B'
+            if ct == 'int'
+              period = parse_ctime cv
+            elsif ct == 'ary'
+              list, body = parse_cevent *cv
+            elsif ct == 'str'
+              list = st.split /\s{4}\s*|\n+/
+            else
+              raise "col B should be parsed: #{col}"
+            end
+          elsif ci == 'C'
+            if ct == 'str'
+              if !cv
+                raise "col B should be correct: #{col}"
+              end
+              title,author,period,stamp,body = parse_creport cv
+            else
+              raise "col C should be parsed: #{col}"
+            end
+          else
+            nil
+          end
         end
-        type = type ? Occasion::Event : Occasion::Report
-        Occasion.new title, author, period, stamp, list, body, type
-      end#.select &:title
+        if cols.find { |c| c.index == 'B' }
+          Occasion.new title,author,period,stamp,list,body,Occasion::Event
+        elsif cols.find { |c| c.index == 'C' }
+          Occasion.new title,author,period,stamp,list,body,Occasion::Report
+        else
+          nil
+        end
+      end.compact#.select &:title
     end
 
-    def parse_file(fname)
-      strings, sheet = ['strings', 'sheet1']
-      .map { |f| Nokogiri::XML.parse File.read "#{fname}/#{f}.xml" }
-      si = strings / '/xmlns:sst/xmlns:si'
-      sr = sheet / '/xmlns:worksheet/xmlns:sheetData/xmlns:row[position()>1]'
-      empty = /\A[\s\n]*\Z/m
-      occasions = sr.map do |row|
-        title, author, period, stamp, list, body, type = nil
-        row.children.each do |col|
-          ct, cr = col.text, col.attr('r')[0]
-          if cr == 'A' then period = parse_cperiod ct, period
-          elsif col.attr('t') == 's'
-            st = (se = si[ct.to_i]).text
-            if type = cr == 'C'
-              title,author,period,stamp,body = parse_creport(st, period)
-            elsif cr == 'B'
-              rt = (re = se / './xmlns:r').map(&:text).reject {|t|t =~ empty}
-              if rt.size > 1 then list, body = parse_cevent st, re, rt
-              else                list = st.split /\s{4}\s*|\n+/
-              end
-            end # cr == 'D'
-          elsif ct =~ /^\d+$/ then period = parse_ctime ct
-          end # ct.empty? == true
-        end
-        type = type ? Occasion::Event : Occasion::Report
-        Occasion.new title, author, period, stamp, list, body, type
-      end#.select &:title
-    end
+    #def parse_file(fname)
+    #  strings, sheet = ['strings', 'sheet1']
+    #  .map { |f| Nokogiri::XML.parse File.read "#{fname}/#{f}.xml" }
+    #  si = strings / '/xmlns:sst/xmlns:si'
+    #  sr = sheet / '/xmlns:worksheet/xmlns:sheetData/xmlns:row[position()>1]'
+    #  empty = /\A[\s\n]*\Z/m
+    #  occasions = sr.map do |row|
+    #    title, author, period, stamp, list, body, type = nil
+    #    row.children.each do |col|
+    #      ct, cr = col.text, col.attr('r')[0]
+    #      if cr == 'A' then period = parse_cperiod ct, period
+    #      elsif col.attr('t') == 's'
+    #        st = (se = si[ct.to_i]).text
+    #        if type = cr == 'C'
+    #          title,author,period,stamp,body = parse_creport(st, period)
+    #        elsif cr == 'B'
+    #          rt = (re = se / './xmlns:r').map(&:text).reject {|t|t =~ empty}
+    #          if rt.size > 1 then list, body = parse_cevent st, re, rt
+    #          else                list = st.split /\s{4}\s*|\n+/
+    #          end
+    #        end # cr == 'D'
+    #      elsif ct =~ /^\d+$/ then period = parse_ctime ct
+    #      end # ct.empty? == true
+    #    end
+    #    type = type ? Occasion::Event : Occasion::Report
+    #    Occasion.new title, author, period, stamp, list, body, type
+    #  end#.select &:title
+    #end
 
     def valid_date?(src, dst = nil)
       if dst.nil? 
@@ -219,7 +290,8 @@ module Conv
       list.map { |x| {'li'=>x} }
     end
 
-    def parse_cperiod(ct, period)
+    def parse_cperiod(ct)
+      period = nil
       p = ct.split(/-|－|至|\./).map { |p| p.scan(/\d+/).map &:to_i }
       period = parse_period p if valid_period? p
       if period.nil?
@@ -233,12 +305,12 @@ module Conv
       [[time.year, time.month, time.day]]
     end
 
-    def parse_cevent(st, re, rt) # pt: paragraphs of text, lt: list of text
+    def parse_cevent(rt, lt) # pt: paragraphs of text, lt: list of text
       list, body = nil
       l, r = 0, 0
+      st = (rt + lt).join
       pt = rt.slice_after { |p| p[-1] == '。' }.map &:join
-      lt = re.slice_after {|s|s.at('./xmlns:t').attr('xml:space')=='preserve'}
-      .map { |s| s.map(&:text).join }.slice_after do |p|
+      lt = lt.slice_after do |p|
         l += p.scan(/\(|（/).size; r += p.scan(/\)|）/).size
         l = r = 0 if l == r; l == r
       end.map(&:join).slice_when do |x,y|
@@ -256,8 +328,8 @@ module Conv
       [list, body]
     end
 
-    def parse_creport(st, period)
-      title, author, stamp, body = nil
+    def parse_creport(st)
+      title, author, period, stamp, body = nil
       empty = /\A[\s\n]*\Z/m
       te = -1
       tt = nil
