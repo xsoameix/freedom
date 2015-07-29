@@ -7,3 +7,13 @@ Gemfile.lock
 **/*.txt
 **/*.csv
 all.csv
+
+# data files
+**/*.docx
+**/*.doc
+**/*.xls
+**/*.xlsx
+**/*.rar
+**/*.bat
+**/*.bmp
+**/*.zip
